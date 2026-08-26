@@ -1,0 +1,21 @@
+{
+  "name": "vagas-simulador",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Publica eventos MQTT no lugar da maquete física",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
+    "cenario": "tsx src/index.ts --modo cenario",
+    "verificar-tipos": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mqtt": "^5.10.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

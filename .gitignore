@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+.expo/
+.env
+.env.local
+*.log
+npm-debug.log*
+
+# PlatformIO
+firmware/.pio/
+firmware/.vscode/
+
+# Saída de fatiamento / impressão
+maquete/saida/
+*.gcode
+
+.DS_Store
+Thumbs.db

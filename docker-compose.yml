@@ -1,0 +1,32 @@
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: vagas-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-dados:/mosquitto/data
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vagas-postgres
+    environment:
+      POSTGRES_USER: vagas
+      POSTGRES_PASSWORD: vagas
+      POSTGRES_DB: vagas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vagas"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  mosquitto-dados:
+  postgres-dados:
