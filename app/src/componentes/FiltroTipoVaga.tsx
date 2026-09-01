@@ -1,8 +1,10 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { Vaga } from '../api/tipos';
 import type { FiltroTipo } from '../estado/loja';
-import { espacamento, raio, tipografia, type Paleta_ } from '../tema';
+import { vibrar } from '../estado/preferencias';
+import { espacamento, raio, tipografia } from '../tema';
+import { usarTema } from '../tema-contexto';
 
 const OPCOES: Array<{ valor: FiltroTipo; rotulo: string }> = [
   { valor: 'TODAS', rotulo: 'Todas' },
@@ -14,14 +16,19 @@ const OPCOES: Array<{ valor: FiltroTipo; rotulo: string }> = [
 interface Props {
   filtro: FiltroTipo;
   vagas: Vaga[];
-  paleta: Paleta_;
   aoEscolher: (filtro: FiltroTipo) => void;
 }
 
-/** Filtro por tipo de vaga, com a contagem de livres de cada tipo no próprio rótulo. */
-export function FiltroTipoVaga({ filtro, vagas, paleta, aoEscolher }: Props): React.JSX.Element {
+/** Filtro por tipo de vaga, com a contagem de livres no próprio rótulo. */
+export function FiltroTipoVaga({ filtro, vagas, aoEscolher }: Props): React.JSX.Element {
+  const { paleta } = usarTema();
+
   return (
-    <View style={estilos.linha}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={estilos.linha}
+    >
       {OPCOES.map(({ valor, rotulo }) => {
         const doTipo = valor === 'TODAS' ? vagas : vagas.filter((v) => v.tipo === valor);
         const livres = doTipo.filter((v) => v.estado === 'LIVRE').length;
@@ -30,7 +37,10 @@ export function FiltroTipoVaga({ filtro, vagas, paleta, aoEscolher }: Props): Re
         return (
           <Pressable
             key={valor}
-            onPress={() => aoEscolher(valor)}
+            onPress={() => {
+              if (!ativo) void vibrar('leve');
+              aoEscolher(valor);
+            }}
             accessibilityRole="button"
             accessibilityState={{ selected: ativo }}
             accessibilityLabel={`${rotulo}: ${livres} livres de ${doTipo.length}`}
@@ -43,32 +53,48 @@ export function FiltroTipoVaga({ filtro, vagas, paleta, aoEscolher }: Props): Re
             ]}
           >
             <Text
+              style={[tipografia.legenda, { color: ativo ? '#ffffff' : paleta.tintaSecundaria }]}
+            >
+              {rotulo}
+            </Text>
+            <View
               style={[
-                tipografia.legenda,
-                { color: ativo ? '#ffffff' : paleta.tintaSecundaria },
+                estilos.contador,
+                { backgroundColor: ativo ? 'rgba(255,255,255,0.22)' : paleta.superficieSutil },
               ]}
             >
-              {rotulo} · {livres}/{doTipo.length}
-            </Text>
+              <Text
+                style={[
+                  tipografia.micro,
+                  { color: ativo ? '#ffffff' : livres > 0 ? paleta.tintaPrimaria : paleta.tintaSuave },
+                ]}
+              >
+                {livres}/{doTipo.length}
+              </Text>
+            </View>
           </Pressable>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const estilos = StyleSheet.create({
-  linha: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: espacamento.sm,
-  },
+  linha: { flexDirection: 'row', gap: espacamento.sm, paddingRight: espacamento.lg },
   pilula: {
-    paddingHorizontal: espacamento.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: espacamento.sm,
+    paddingLeft: espacamento.md,
+    paddingRight: espacamento.sm,
     paddingVertical: espacamento.sm,
-    borderRadius: raio.lg,
+    borderRadius: raio.pilula,
     borderWidth: StyleSheet.hairlineWidth,
-    minHeight: 36,
-    justifyContent: 'center',
+    minHeight: 40,
+  },
+  contador: {
+    paddingHorizontal: espacamento.sm,
+    paddingVertical: 3,
+    borderRadius: raio.pilula,
   },
 });

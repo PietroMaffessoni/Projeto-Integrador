@@ -1,5 +1,7 @@
+import { Platform, type TextStyle, type ViewStyle } from 'react-native';
+
 /**
- * Cores e medidas do app.
+ * Sistema visual do aplicativo.
  *
  * ## Por que estes verdes e vermelhos, e não os óbvios
  *
@@ -14,18 +16,20 @@
  * agora **ΔE 26,2** — mais de seis vezes a separação anterior, sem abrir mão de
  * "verde é livre".
  *
- * Ainda assim, cor nunca decide sozinha: cada vaga carrega textura (hachura para
- * ocupada, pontilhado para offline), rótulo com o identificador e ícone na
- * legenda. Quem não distingue as cores continua lendo o mapa.
+ * Ainda assim, cor nunca decide sozinha: vaga ocupada mostra a silhueta de um
+ * carro, vaga sem sinal fica pontilhada, e todas exibem o identificador.
  */
 
 export type EsquemaCor = 'claro' | 'escuro';
 
-interface Paleta {
+export interface Paleta {
   fundo: string;
+  fundoGradiente: readonly [string, string];
   superficie: string;
   superficieElevada: string;
+  superficieSutil: string;
   borda: string;
+  bordaForte: string;
   tintaPrimaria: string;
   tintaSecundaria: string;
   tintaSuave: string;
@@ -33,9 +37,9 @@ interface Paleta {
   livre: string;
   ocupada: string;
   offline: string;
-  /** Tom da hachura sobre a vaga ocupada — mesma família, mais claro. */
+  /** Tom do carro desenhado sobre a vaga ocupada. */
+  carro: string;
   hachura: string;
-  /** Pontilhado sobre a vaga sem informação. */
   pontilhado: string;
 
   tintaSobreLivre: string;
@@ -43,73 +47,96 @@ interface Paleta {
   tintaSobreOffline: string;
 
   asfalto: string;
+  asfaltoEscuro: string;
   calcada: string;
   faixa: string;
   destaque: string;
+  destaqueSuave: string;
 
   atencao: string;
   critico: string;
 
-  /** Rampa sequencial do mapa de calor, do menos ao mais ocupado. */
+  /** Áreas do campus ainda sem sensores. */
+  semSensor: string;
+  semSensorTraco: string;
+
   rampaOcupacao: readonly string[];
 }
 
 const CLARO: Paleta = {
-  fundo: '#f4f4f1',
-  superficie: '#fcfcfb',
+  fundo: '#f2f3f0',
+  fundoGradiente: ['#f7f8f5', '#eceee9'],
+  superficie: '#ffffff',
   superficieElevada: '#ffffff',
-  borda: 'rgba(11,11,11,0.10)',
-  tintaPrimaria: '#0b0b0b',
-  tintaSecundaria: '#52514e',
-  tintaSuave: '#898781',
+  superficieSutil: '#f6f7f4',
+  borda: 'rgba(11,11,11,0.09)',
+  bordaForte: 'rgba(11,11,11,0.18)',
+  tintaPrimaria: '#101211',
+  tintaSecundaria: '#4d514e',
+  tintaSuave: '#868b87',
 
   livre: '#4cc24c',
   ocupada: '#9c1c1c',
   offline: '#8b8b86',
-  hachura: 'rgba(255,255,255,0.42)',
+  carro: 'rgba(255,255,255,0.55)',
+  hachura: 'rgba(255,255,255,0.16)',
   pontilhado: 'rgba(255,255,255,0.55)',
 
   tintaSobreLivre: '#0b2d0b',
   tintaSobreOcupada: '#ffffff',
   tintaSobreOffline: '#ffffff',
 
-  asfalto: '#e3e2dd',
-  calcada: '#f0efec',
+  asfalto: '#e2e3de',
+  asfaltoEscuro: '#d3d5cf',
+  calcada: '#eeefeb',
   faixa: '#ffffff',
   destaque: '#2a78d6',
+  destaqueSuave: 'rgba(42,120,214,0.12)',
 
   atencao: '#b26a00',
   critico: '#b3261e',
+
+  semSensor: '#d8dad4',
+  semSensorTraco: 'rgba(11,11,11,0.28)',
 
   rampaOcupacao: ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'],
 };
 
 const ESCURO: Paleta = {
-  fundo: '#0d0d0d',
-  superficie: '#16181a',
-  superficieElevada: '#1f2224',
-  borda: 'rgba(255,255,255,0.12)',
-  tintaPrimaria: '#ffffff',
-  tintaSecundaria: '#c3c2b7',
-  tintaSuave: '#898781',
+  fundo: '#0e1011',
+  fundoGradiente: ['#15181a', '#0c0e0f'],
+  superficie: '#181b1d',
+  superficieElevada: '#202426',
+  superficieSutil: '#1e2224',
+  borda: 'rgba(255,255,255,0.10)',
+  bordaForte: 'rgba(255,255,255,0.22)',
+  tintaPrimaria: '#f6f7f5',
+  tintaSecundaria: '#c2c5c0',
+  tintaSuave: '#878b87',
 
   livre: '#63dd63',
   ocupada: '#b23a3a',
   offline: '#7a7a74',
-  hachura: 'rgba(255,255,255,0.30)',
-  pontilhado: 'rgba(255,255,255,0.45)',
+  carro: 'rgba(255,255,255,0.45)',
+  hachura: 'rgba(255,255,255,0.14)',
+  pontilhado: 'rgba(255,255,255,0.42)',
 
   tintaSobreLivre: '#082408',
   tintaSobreOcupada: '#ffffff',
-  tintaSobreOffline: '#0b0b0b',
+  tintaSobreOffline: '#0e0e0e',
 
-  asfalto: '#26282a',
-  calcada: '#1f2224',
-  faixa: '#5c5f61',
-  destaque: '#3987e5',
+  asfalto: '#26292b',
+  asfaltoEscuro: '#1c1f21',
+  calcada: '#202426',
+  faixa: '#5f6365',
+  destaque: '#5aa0f0',
+  destaqueSuave: 'rgba(90,160,240,0.16)',
 
-  atencao: '#fab219',
+  atencao: '#f0ad24',
   critico: '#e66767',
+
+  semSensor: '#2b2f31',
+  semSensorTraco: 'rgba(255,255,255,0.26)',
 
   // Numa superfície escura, "quase zero" é o que se confunde com o fundo:
   // a rampa começa escura e clareia com a ocupação.
@@ -126,23 +153,54 @@ export const espacamento = {
   md: 12,
   lg: 16,
   xl: 24,
+  xxl: 32,
 } as const;
 
 export const raio = {
-  sm: 6,
-  md: 10,
-  lg: 16,
+  sm: 8,
+  md: 12,
+  lg: 18,
+  xl: 26,
+  pilula: 999,
 } as const;
 
 export const tipografia = {
-  titulo: { fontSize: 20, fontWeight: '700' as const },
+  display: { fontSize: 34, fontWeight: '800' as const, letterSpacing: -0.6 },
+  titulo: { fontSize: 20, fontWeight: '700' as const, letterSpacing: -0.2 },
   subtitulo: { fontSize: 15, fontWeight: '600' as const },
   corpo: { fontSize: 14, fontWeight: '400' as const },
   legenda: { fontSize: 12, fontWeight: '500' as const },
-  numeroHeroi: { fontSize: 44, fontWeight: '700' as const },
-};
+  micro: { fontSize: 10.5, fontWeight: '600' as const, letterSpacing: 0.5 },
+  numeroHeroi: { fontSize: 48, fontWeight: '800' as const, letterSpacing: -1.5 },
+} satisfies Record<string, TextStyle>;
 
-/** Cor de fundo e de texto de cada estado, num só lugar. */
+/** Elevação sutil — o suficiente para separar planos sem virar sombra de 2014. */
+export function sombra(esquema: EsquemaCor, nivel: 1 | 2 = 1): ViewStyle {
+  if (esquema === 'escuro') {
+    // No escuro, sombra some. A separação vem da própria superfície mais clara.
+    return {};
+  }
+  const config = nivel === 1
+    ? { altura: 1, raio: 3, opacidade: 0.06, elevacao: 1 }
+    : { altura: 6, raio: 16, opacidade: 0.1, elevacao: 4 };
+
+  return Platform.select<ViewStyle>({
+    android: { elevation: config.elevacao },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: config.altura },
+      shadowOpacity: config.opacidade,
+      shadowRadius: config.raio,
+    },
+  })!;
+}
+
+export const duracao = {
+  rapida: 160,
+  media: 280,
+  destaque: 900,
+} as const;
+
 export function coresDoEstado(
   paleta: Paleta,
   estado: 'LIVRE' | 'OCUPADA' | 'OFFLINE',
@@ -157,10 +215,7 @@ export function coresDoEstado(
   }
 }
 
-/**
- * Ícone que acompanha cada estado. Existe para que a informação não dependa da
- * cor — na legenda, na lista e nas notificações.
- */
+/** Símbolo textual de cada estado, para onde não cabe desenho. */
 export const ICONE_ESTADO = {
   LIVRE: '○',
   OCUPADA: '✕',
@@ -173,4 +228,5 @@ export const ROTULO_ESTADO = {
   OFFLINE: 'Sem informação',
 } as const;
 
+/** Mantido para compatibilidade com os componentes já escritos. */
 export type Paleta_ = Paleta;

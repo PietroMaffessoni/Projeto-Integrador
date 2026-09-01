@@ -1,46 +1,51 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Path, Rect } from 'react-native-svg';
-import { coresDoEstado, espacamento, raio, tipografia, type Paleta_ } from '../tema';
+import Svg, { Rect } from 'react-native-svg';
+import { coresDoEstado, espacamento, tipografia } from '../tema';
+import { usarTema } from '../tema-contexto';
 
 type EstadoLegenda = 'LIVRE' | 'OCUPADA' | 'OFFLINE';
 
 const ITENS: Array<{ estado: EstadoLegenda; rotulo: string }> = [
   { estado: 'LIVRE', rotulo: 'Livre' },
   { estado: 'OCUPADA', rotulo: 'Ocupada' },
-  { estado: 'OFFLINE', rotulo: 'Sem informação' },
+  { estado: 'OFFLINE', rotulo: 'Sem sinal' },
 ];
 
 /**
- * A legenda repete a textura de cada estado, não só a cor — é o que permite
- * ler o mapa sem depender de distinguir verde de vermelho.
+ * A legenda repete o **desenho** de cada estado, não só a cor.
+ *
+ * De nada adiantaria a silhueta do carro existir no mapa se aqui aparecessem só
+ * quadradinhos coloridos: quem não distingue verde de vermelho leria a legenda
+ * como três tons iguais.
  */
-export function Legenda({ paleta }: { paleta: Paleta_ }): React.JSX.Element {
+export function Legenda(): React.JSX.Element {
+  const { paleta } = usarTema();
+
   return (
     <View style={estilos.linha}>
       {ITENS.map(({ estado, rotulo }) => {
         const cores = coresDoEstado(paleta, estado);
         return (
           <View key={estado} style={estilos.item}>
-            <Svg width={18} height={18}>
-              <Rect x={0} y={0} width={18} height={18} rx={4} fill={cores.fundo} />
+            <Svg width={22} height={22}>
+              <Rect x={0} y={0} width={22} height={22} rx={5} fill={cores.fundo} />
               {estado === 'OCUPADA' && (
                 <>
-                  <Path d="M0 18 L18 0" stroke={paleta.hachura} strokeWidth={2} />
-                  <Path d="M0 9 L9 0" stroke={paleta.hachura} strokeWidth={2} />
-                  <Path d="M9 18 L18 9" stroke={paleta.hachura} strokeWidth={2} />
+                  <Rect x={6} y={4} width={10} height={14} rx={3} fill={paleta.carro} />
+                  <Rect x={7.6} y={7.5} width={6.8} height={5.5} rx={1.6} fill={cores.fundo} opacity={0.55} />
                 </>
               )}
               {estado === 'OFFLINE' && (
                 <>
-                  <Rect x={4} y={4} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
-                  <Rect x={11} y={4} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
-                  <Rect x={4} y={11} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
-                  <Rect x={11} y={11} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
+                  <Rect x={5} y={5} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
+                  <Rect x={13} y={5} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
+                  <Rect x={5} y={13} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
+                  <Rect x={13} y={13} width={2.4} height={2.4} rx={1.2} fill={paleta.pontilhado} />
                 </>
               )}
             </Svg>
-            <Text style={[estilos.rotulo, { color: paleta.tintaSecundaria }]}>{rotulo}</Text>
+            <Text style={[tipografia.legenda, { color: paleta.tintaSecundaria }]}>{rotulo}</Text>
           </View>
         );
       })}
@@ -53,13 +58,7 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: espacamento.lg,
-    paddingVertical: espacamento.sm,
+    paddingVertical: espacamento.xs,
   },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacamento.xs + 2,
-    borderRadius: raio.sm,
-  },
-  rotulo: tipografia.legenda,
+  item: { flexDirection: 'row', alignItems: 'center', gap: espacamento.xs + 2 },
 });

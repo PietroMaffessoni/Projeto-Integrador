@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { FaixaPrevisao } from '../api/tipos';
-import { espacamento, raio, tipografia, type Paleta_ } from '../tema';
+import { espacamento, raio, tipografia, type Paleta } from '../tema';
+import { usarTema } from '../tema-contexto';
 import { DIAS_SEMANA, porcentagem } from '../utils/tempo';
 
 interface Props {
   faixas: FaixaPrevisao[];
-  paleta: Paleta_;
 }
 
 const HORAS = Array.from({ length: 24 }, (_, i) => i);
@@ -23,7 +23,8 @@ const ALTURA_CELULA = 15;
  * — ela fica sem preenchimento e com contorno tracejado. A diferença entre
  * "estava livre" e "não sabemos" é a mesma que separa LIVRE de OFFLINE no mapa.
  */
-export function MapaDeCalor({ faixas, paleta }: Props): React.JSX.Element {
+export function MapaDeCalor({ faixas }: Props): React.JSX.Element {
+  const { paleta } = usarTema();
   const [selecionada, setSelecionada] = useState<FaixaPrevisao | null>(null);
   const hoje = new Date().getDay();
   const horaAgora = new Date().getHours();
@@ -121,7 +122,7 @@ export function MapaDeCalor({ faixas, paleta }: Props): React.JSX.Element {
   );
 }
 
-function EscalaDeCor({ paleta }: { paleta: Paleta_ }): React.JSX.Element {
+function EscalaDeCor({ paleta }: { paleta: Paleta }): React.JSX.Element {
   return (
     <View style={estilos.escala}>
       <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>vazio</Text>

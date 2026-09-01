@@ -1,5 +1,6 @@
 import * as Notificacoes from 'expo-notifications';
 import { Platform } from 'react-native';
+import { vibrar } from './estado/preferencias';
 
 let preparado = false;
 let permitido = false;
@@ -49,6 +50,10 @@ export async function prepararNotificacoes(): Promise<boolean> {
 }
 
 export async function avisarVagaLiberada(vaga: string): Promise<void> {
+  // A vibração vem antes da notificação de propósito: funciona mesmo sem
+  // permissão concedida, e é o que se percebe com o celular no bolso.
+  void vibrar('sucesso');
+
   if (!permitido) return;
 
   try {

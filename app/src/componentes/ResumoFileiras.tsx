@@ -1,22 +1,19 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { Vaga } from '../api/tipos';
-import { espacamento, raio, tipografia, type Paleta_ } from '../tema';
-
-interface Props {
-  vagas: Vaga[];
-  paleta: Paleta_;
-}
+import { espacamento, raio, tipografia } from '../tema';
+import { usarTema } from '../tema-contexto';
+import { Cartao } from './Cartao';
 
 /**
  * Contador de vagas livres por fileira.
  *
- * O número grande é a resposta à única pergunta que o motorista faz ao abrir o
- * app — "tem vaga?" — então ele vem antes do mapa e sem enfeite. Vagas sem
- * informação aparecem à parte: contá-las como livres seria mentir, escondê-las
- * também.
+ * Vagas sem informação aparecem à parte, nunca somadas às livres: contá-las como
+ * livres seria mentir, escondê-las também.
  */
-export function ResumoFileiras({ vagas, paleta }: Props): React.JSX.Element {
+export function ResumoFileiras({ vagas }: { vagas: Vaga[] }): React.JSX.Element {
+  const { paleta } = usarTema();
+
   const livresTotal = vagas.filter((v) => v.estado === 'LIVRE').length;
   const semInfo = vagas.filter((v) => v.estado === 'OFFLINE').length;
 
@@ -25,13 +22,14 @@ export function ResumoFileiras({ vagas, paleta }: Props): React.JSX.Element {
     return {
       fileira,
       livres: daFileira.filter((v) => v.estado === 'LIVRE').length,
+      ocupadas: daFileira.filter((v) => v.estado === 'OCUPADA').length,
       total: daFileira.length,
       semInfo: daFileira.filter((v) => v.estado === 'OFFLINE').length,
     };
   });
 
   return (
-    <View style={[estilos.cartao, { backgroundColor: paleta.superficie, borderColor: paleta.borda }]}>
+    <Cartao>
       <View style={estilos.heroi}>
         <Text style={[tipografia.numeroHeroi, { color: paleta.tintaPrimaria }]}>{livresTotal}</Text>
         <View style={estilos.heroiTexto}>
@@ -39,59 +37,57 @@ export function ResumoFileiras({ vagas, paleta }: Props): React.JSX.Element {
             {livresTotal === 1 ? 'vaga livre' : 'vagas livres'}
           </Text>
           <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>
-            de {vagas.length} no estacionamento
+            de {vagas.length} no setor-piloto
           </Text>
         </View>
       </View>
 
-      <View style={[estilos.divisor, { backgroundColor: paleta.borda }]} />
-
       <View style={estilos.fileiras}>
-        {fileiras.map(({ fileira, livres, total, semInfo: semInfoFileira }) => (
-          <View key={fileira} style={estilos.fileira}>
-            <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>Fileira {fileira}</Text>
-            <Text style={[estilos.numeroFileira, { color: paleta.tintaPrimaria }]}>
-              {livres}
-              <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}> / {total}</Text>
+        {fileiras.map(({ fileira, livres, ocupadas, total, semInfo: semInfoFileira }) => (
+          <View
+            key={fileira}
+            style={[estilos.fileira, { backgroundColor: paleta.superficieSutil, borderColor: paleta.borda }]}
+          >
+            <Text style={[tipografia.micro, { color: paleta.tintaSuave }]}>FILEIRA {fileira}</Text>
+
+            <View style={estilos.medidor}>
+              {Array.from({ length: total }, (_, i) => {
+                const cor =
+                  i < livres ? paleta.livre : i < livres + ocupadas ? paleta.ocupada : paleta.offline;
+                return <View key={i} style={[estilos.traco, { backgroundColor: cor }]} />;
+              })}
+            </View>
+
+            <Text style={[tipografia.corpo, { color: paleta.tintaSecundaria }]}>
+              <Text style={{ fontWeight: '700', color: paleta.tintaPrimaria }}>{livres}</Text> livres
+              {semInfoFileira > 0 ? ` · ${semInfoFileira} sem sinal` : ''}
             </Text>
-            {semInfoFileira > 0 && (
-              <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>
-                {semInfoFileira} sem sinal
-              </Text>
-            )}
           </View>
         ))}
       </View>
 
       {semInfo > 0 && (
-        <Text style={[estilos.aviso, { color: paleta.atencao }]}>
+        <Text style={[tipografia.legenda, { color: paleta.atencao }]}>
           ⚠ {semInfo} {semInfo === 1 ? 'vaga não está reportando' : 'vagas não estão reportando'} —
           não contam como livres.
         </Text>
       )}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    borderRadius: raio.lg,
+  heroi: { flexDirection: 'row', alignItems: 'center', gap: espacamento.md },
+  heroiTexto: { flex: 1, gap: 1 },
+  fileiras: { flexDirection: 'row', gap: espacamento.sm },
+  fileira: {
+    flex: 1,
+    gap: espacamento.sm,
+    padding: espacamento.md,
+    borderRadius: raio.md,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: espacamento.lg,
-    gap: espacamento.md,
   },
-  heroi: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: espacamento.md,
-  },
-  heroiTexto: { flex: 1 },
-  divisor: { height: StyleSheet.hairlineWidth },
-  fileiras: {
-    flexDirection: 'row',
-    gap: espacamento.xl,
-  },
-  fileira: { gap: 2 },
-  numeroFileira: { fontSize: 22, fontWeight: '700' },
-  aviso: { ...tipografia.legenda, marginTop: 2 },
+  /** Um traço por vaga: o padrão de ocupação da fileira num relance. */
+  medidor: { flexDirection: 'row', gap: 2 },
+  traco: { flex: 1, height: 8, borderRadius: 2 },
 });

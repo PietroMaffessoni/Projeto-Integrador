@@ -55,16 +55,22 @@ mesmo eixo dos outros dois, é a ausência de informação, e deve parecer apaga
 
 Cor nenhuma decide sozinha no app. Cada estado carrega três sinais:
 
-| Estado | Cor | Textura | Texto |
+| Estado | Cor | Desenho | Texto |
 |---|---|---|---|
-| Livre | verde claro | preenchimento sólido | rótulo `Livre` na legenda |
-| Ocupada | vermelho escuro | **hachura diagonal a 45°** | rótulo `Ocupada` |
-| Sem informação | cinza | **pontilhado** | rótulo `Sem informação` |
+| Livre | verde claro | vaga vazia, preenchimento liso | rótulo `Livre` na legenda |
+| Ocupada | vermelho escuro | **silhueta de carro** sobre hachura a 45° | rótulo `Ocupada` |
+| Sem informação | cinza | **pontilhado** com `?` no centro | rótulo `Sem sinal` |
 
-A textura está no mapa
+O CLAUDE.md admite "hachura diagonal **ou** ícone" como segundo indicador. A
+escolha final foi o carro visto de cima, com a hachura mantida ao fundo em baixa
+opacidade: o carro é reconhecido antes de ser lido, enquanto uma hachura precisa
+ser comparada com a legenda para significar alguma coisa. Uma vaga com carro
+desenhado está ocupada mesmo para quem vê a tela em preto e branco.
+
+O desenho está no mapa
 ([`MapaEstacionamento.tsx`](../app/src/componentes/MapaEstacionamento.tsx)) e se
 repete na legenda ([`Legenda.tsx`](../app/src/componentes/Legenda.tsx)) — não
-adianta a hachura existir no mapa se a legenda mostra só quadradinhos coloridos.
+adianta o carro existir no mapa se a legenda mostra só quadradinhos coloridos.
 
 Além disso, **cada vaga exibe o próprio identificador** (`A3`, `B7`) dentro do
 polígono, e o painel de detalhe abre com ícone e texto do estado. Nenhuma
@@ -86,11 +92,28 @@ principal, e vale nos dois lugares.
 
 ---
 
+## O mapa do campus
+
+A aba **Campus** distingue dois estados que não podem ser confundidos: setor
+medido por sensores e setor sem instrumentação. A diferença não é só de cor — as
+áreas sem sensores são **hachuradas**, têm contorno fino em vez de contorno de
+destaque, e trazem o número precedido de `~` para marcar que é estimativa. O
+mesmo conteúdo aparece em lista logo abaixo do desenho, legível por leitor de
+tela e por quem não consegue interpretar a planta.
+
 ## Alvos de toque
 
 Toda área tocável tem pelo menos 44 × 44 pt: pílulas de filtro, células do mapa
-de calor, botões do painel. As vagas no SVG são maiores que isso na escala em que
-o mapa é renderizado.
+de calor, abas, linhas de setor e botões do painel. As vagas no SVG são maiores
+que isso na escala em que o mapa é renderizado.
+
+## Movimento
+
+As animações do app são curtas e não decorativas: o brilho de 900 ms marca *qual*
+vaga acabou de mudar, e o pulso marca a vaga sugerida. Nenhuma se repete
+indefinidamente sem motivo, e nenhuma carrega informação que não esteja também
+no texto ou na cor — quem tiver "reduzir movimento" ligado no sistema não perde
+nada.
 
 ---
 

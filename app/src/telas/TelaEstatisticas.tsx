@@ -3,15 +3,21 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { buscarPrevisao } from '../api/cliente';
 import type { Previsao } from '../api/tipos';
 import { BarraOcupacao } from '../componentes/BarraOcupacao';
+import { Cartao } from '../componentes/Cartao';
+import { Esqueleto } from '../componentes/Esqueleto';
 import { MapaDeCalor } from '../componentes/MapaDeCalor';
+import { Selo } from '../componentes/Selo';
 import { usarLoja } from '../estado/loja';
-import { espacamento, raio, tipografia, type Paleta_ } from '../tema';
+import { espacamento, tipografia } from '../tema';
+import { usarTema } from '../tema-contexto';
 import { porcentagem } from '../utils/tempo';
 
-export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Element {
+export function TelaEstatisticas(): React.JSX.Element {
+  const { paleta } = usarTema();
   const vagas = usarLoja((e) => e.vagas);
   const [previsao, setPrevisao] = useState<Previsao | null>(null);
   const [recarregando, setRecarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
   const [erroPrevisao, setErroPrevisao] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
@@ -20,6 +26,8 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
       setErroPrevisao(null);
     } catch (erro) {
       setErroPrevisao(erro instanceof Error ? erro.message : 'Falha ao carregar a previsão');
+    } finally {
+      setCarregando(false);
     }
   }, []);
 
@@ -38,11 +46,13 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
     conhecidas.length > 0
       ? conhecidas.filter((v) => v.estado === 'OCUPADA').length / conhecidas.length
       : 0;
+  const semSinal = vagas.length - conhecidas.length;
 
   return (
     <ScrollView
       style={{ backgroundColor: paleta.fundo }}
       contentContainerStyle={estilos.conteudo}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl
           refreshing={recarregando}
@@ -55,16 +65,14 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
         />
       }
     >
-      <Cartao paleta={paleta} titulo="Agora">
+      <Cartao titulo="Agora" acao={<Selo texto="ao vivo" cor={paleta.livre} comPonto />}>
         <View style={estilos.heroi}>
           <Text style={[tipografia.numeroHeroi, { color: paleta.tintaPrimaria }]}>
             {porcentagem(taxaAgora)}
           </Text>
           <Text style={[tipografia.legenda, { color: paleta.tintaSuave, flex: 1 }]}>
             das vagas de que temos notícia estão ocupadas
-            {vagas.length - conhecidas.length > 0
-              ? ` · ${vagas.length - conhecidas.length} sem sinal ficaram de fora da conta`
-              : ''}
+            {semSinal > 0 ? ` · ${semSinal} sem sinal ficaram de fora da conta` : ''}
           </Text>
         </View>
 
@@ -77,7 +85,6 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
                 rotulo={`Fileira ${fileira}`}
                 contagem={contar(daFileira)}
                 total={daFileira.length}
-                paleta={paleta}
               />
             );
           })}
@@ -85,39 +92,46 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
       </Cartao>
 
       <Cartao
-        paleta={paleta}
         titulo="Ocupação por faixa horária"
         subtitulo={
           previsao
-            ? `Média das últimas ${previsao.janelaDias} semanas de histórico, ponderada pelo tempo`
+            ? `Média das últimas ${previsao.janelaDias / 7} semanas, ponderada pelo tempo`
             : undefined
         }
       >
-        {erroPrevisao && (
+        {carregando && (
+          <View style={{ gap: espacamento.sm }}>
+            <Esqueleto altura={140} />
+            <Esqueleto altura={14} largura="60%" />
+          </View>
+        )}
+
+        {erroPrevisao && !carregando && (
           <Text style={[tipografia.corpo, { color: paleta.tintaSuave }]}>{erroPrevisao}</Text>
         )}
 
         {previsao && !previsao.amostragemSuficiente && (
-          <Text style={[tipografia.corpo, { color: paleta.tintaSuave }]}>
+          <Text style={[tipografia.corpo, { color: paleta.tintaSecundaria }]}>
             Ainda não há histórico suficiente para afirmar nada. O mapa se preenche conforme os
             sensores registrarem movimento — ou depois de rodar `npm run semear-historico` no
             backend, para demonstração.
           </Text>
         )}
 
-        {previsao && previsao.faixas.length > 0 && (
-          <MapaDeCalor faixas={previsao.faixas} paleta={paleta} />
-        )}
+        {previsao && previsao.faixas.length > 0 && <MapaDeCalor faixas={previsao.faixas} />}
       </Cartao>
 
       {previsao && previsao.melhoresHorariosHoje.length > 0 && (
-        <Cartao paleta={paleta} titulo="Melhores horários hoje">
+        <Cartao
+          titulo="Melhores horários hoje"
+          subtitulo="Ocupação esperada — quanto menor, mais fácil achar vaga"
+        >
           {previsao.melhoresHorariosHoje.map((faixa) => (
             <View key={faixa.hora} style={estilos.linhaHorario}>
-              <Text style={[tipografia.subtitulo, { color: paleta.tintaPrimaria, width: 64 }]}>
+              <Text style={[tipografia.subtitulo, { color: paleta.tintaPrimaria, width: 56 }]}>
                 {String(faixa.hora).padStart(2, '0')}h
               </Text>
-              <View style={[estilos.trilhoFino, { backgroundColor: paleta.superficie }]}>
+              <View style={[estilos.trilhoFino, { backgroundColor: paleta.superficieSutil }]}>
                 <View
                   style={[
                     estilos.preenchimentoFino,
@@ -128,53 +142,27 @@ export function TelaEstatisticas({ paleta }: { paleta: Paleta_ }): React.JSX.Ele
                   ]}
                 />
               </View>
-              <Text style={[tipografia.legenda, { color: paleta.tintaSecundaria, width: 44, textAlign: 'right' }]}>
+              <Text
+                style={[
+                  tipografia.legenda,
+                  { color: paleta.tintaSecundaria, width: 44, textAlign: 'right' },
+                ]}
+              >
                 {porcentagem(faixa.taxaOcupacao)}
               </Text>
             </View>
           ))}
-          <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>
-            Percentual esperado de ocupação — quanto menor, mais fácil encontrar vaga.
-          </Text>
         </Cartao>
       )}
     </ScrollView>
   );
 }
 
-function Cartao({
-  paleta,
-  titulo,
-  subtitulo,
-  children,
-}: {
-  paleta: Paleta_;
-  titulo: string;
-  subtitulo?: string;
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <View style={[estilos.cartao, { backgroundColor: paleta.superficie, borderColor: paleta.borda }]}>
-      <Text style={[tipografia.subtitulo, { color: paleta.tintaPrimaria }]}>{titulo}</Text>
-      {subtitulo && (
-        <Text style={[tipografia.legenda, { color: paleta.tintaSuave }]}>{subtitulo}</Text>
-      )}
-      {children}
-    </View>
-  );
-}
-
 const estilos = StyleSheet.create({
-  conteudo: { padding: espacamento.lg, gap: espacamento.md, paddingBottom: espacamento.xl * 2 },
-  cartao: {
-    borderRadius: raio.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: espacamento.lg,
-    gap: espacamento.md,
-  },
+  conteudo: { padding: espacamento.lg, gap: espacamento.md, paddingBottom: 120 },
   heroi: { flexDirection: 'row', alignItems: 'center', gap: espacamento.md },
   barras: { gap: espacamento.md },
   linhaHorario: { flexDirection: 'row', alignItems: 'center', gap: espacamento.sm },
-  trilhoFino: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
-  preenchimentoFino: { height: 8, borderRadius: 4 },
+  trilhoFino: { flex: 1, height: 10, borderRadius: 5, overflow: 'hidden' },
+  preenchimentoFino: { height: 10, borderRadius: 5 },
 });

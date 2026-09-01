@@ -70,19 +70,36 @@ O raciocínio completo, com a medição, está em
 
 | Aba | O que mostra |
 |---|---|
-| **Mapa** | planta das 16 vagas, contador de livres por fileira, filtro por tipo, detalhe com histórico ao tocar |
+| **Mapa** | sugestão de melhor vaga com caminho desde a entrada, contador por fileira, filtro por tipo, planta das 16 vagas e detalhe com linha do tempo ao tocar |
+| **Campus** | planta esquemática do campus com os ~1.400 lugares, o setor-piloto ao vivo e os demais marcados como ainda sem sensores |
 | **Ocupação** | ocupação atual por fileira e mapa de calor semanal por faixa horária |
-| **Sensores** | anomalias detectadas pelo backend e endereço em uso — a tela de quem mantém a maquete |
+| **Sensores** | anomalias detectadas pelo backend, endereço em uso e preferências (tema, vibração) |
+
+## Recursos
+
+- **Melhor vaga agora** — a vaga livre mais próxima da entrada, com distância em
+  metros reais e o caminho desenhado no mapa. Vagas reservadas só são sugeridas
+  com o filtro correspondente ativo.
+- **Avise quando liberar** — toque numa vaga ocupada; quando ela liberar, o app
+  vibra e emite notificação local.
+- **Tema claro, escuro ou do sistema**, com a escolha lembrada entre sessões.
+- **Linha do tempo da vaga** — quanto tempo ela passou em cada estado, não só a
+  lista de eventos.
+- **Brilho na mudança** — a vaga que acabou de mudar acende por um instante, para
+  o olho saber qual foi.
 
 ## Estrutura
 
 ```
-App.tsx              abas e tema
-src/config.ts        descoberta do backend
-src/tema.ts          paleta, espaçamento, tipografia
-src/api/             cliente REST e tipos do contrato
-src/estado/loja.ts   store (zustand) + WebSocket
-src/componentes/     mapa SVG, legenda, filtro, painel, mapa de calor
-src/telas/           as três abas
-src/notificacoes.ts  aviso local quando uma vaga vigiada libera
+App.tsx                abas, cabeçalho e provedor de tema
+src/config.ts          descoberta do backend
+src/tema.ts            paleta, espaçamento, tipografia, elevação
+src/tema-contexto.tsx  tema resolvido (sistema/claro/escuro)
+src/api/               cliente REST e tipos do contrato
+src/estado/loja.ts     store (zustand) + WebSocket
+src/estado/preferencias.ts  tema, vibração
+src/dados/campus.ts    planta esquemática do campus
+src/componentes/       mapas SVG, cartões, painéis, mapa de calor
+src/telas/             as quatro abas
+src/notificacoes.ts    aviso local quando uma vaga vigiada libera
 ```
